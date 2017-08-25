@@ -1,0 +1,64 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+"Description": "My SSH Bastion host",
+
+
+"Parameters" : {
+    "KeyPair" : {
+      "Description" : "The EC2 Key Pair to allow SSH access to the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName"
+
+    },
+    "VPC":{
+        "Description":"The Default VPC",
+        "Type": "AWS::EC2::VPC::Id"
+    }
+  }, 
+  "Resources":{
+    "EC2Instance":{
+        "Type": "AWS::EC2::Instance",
+        "Properties":{
+            "InstanceType": "t2.micro",
+            "ImageId": "ami-6df1e514",
+            "NetworkInterfaces":[{
+                "AssociatePublicIpAddress": "True",
+                "DeviceIndex":"0",
+            "GroupSet": [{"Ref": "SecurityGroup"}]
+            }],
+            
+"Tags": [{
+     "Key": "Name",
+     "Value": "ssh-bastion-host"
+    }],            
+            "KeyName":{"Ref":"KeyPair"}
+        }
+    },
+
+"SecurityGroup":{
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties":{
+            "GroupDescription": "MySSHBastionhost",
+            "VpcId":{"Ref":"VPC"},
+            "SecurityGroupIngress" : [ {
+            "CidrIp" : "0.0.0.0/0",
+            "FromPort" : "22",
+            "IpProtocol" : "tcp",
+            "ToPort" : "22"
+            
+        } ]
+
+        }
+},
+"ElasticIP":{
+        "Type": "AWS::EC2::EIP",
+        "Properties":{
+            "InstanceId": {"Ref": "EC2Instance"},
+            "Domain":"vpc"
+            
+            }
+
+        }
+        }
+}
+    
+

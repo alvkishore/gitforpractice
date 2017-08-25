@@ -1,0 +1,115 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Secure Network",
+    "Parameters":{
+        
+        "PublicAvailabilityZone": {
+            "Description": "Select Availability Zone",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+        "PrivateAvailabilityZone": {
+            "Description": "Select Availability Zone",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        }
+    },
+   "Resources": {
+       "Securevpc":{
+        "Type" : "AWS::EC2::VPC",
+        "Properties" : {
+            "CidrBlock" : "10.0.0.0/16",
+            "EnableDnsSupport" : "true",
+            "InstanceTenancy" : "default",
+            "Tags" : [ {"Key" : "Name", "Value" : "MYVPC"}]
+        }
+   },
+        "SecureIGW":{
+        "Type" : "AWS::EC2::InternetGateway",
+        "Properties" : {
+            "Tags" : [ {"Key" : "Name", "Value" : "MYIGW"}]
+        }
+    },
+        "Type" : "AWS::EC2::VPCGatewayAttachment",
+        "Properties" : {
+            "VpcId" : {"Ref": "Securevpc" },
+            "VpnGatewayId" : {"Ref": "SecureIGW" }
+        },
+        "Publicsubnet1":{
+        "Type" : "AWS::EC2::Subnet",
+        "Properties" : {
+            "AvailabilityZone" : "PublicAvailabilityZone",
+            "CidrBlock" : "10.50.1.0/24",
+            "Tags" : [ {"Key" : "Name", "Value" : "Publicsubnet1"}],
+            "VpcId" : {"Ref":"Securevpc"}
+  }
+},
+        "Publicsubnet2":{
+        "Type" : "AWS::EC2::Subnet",
+        "Properties" : {
+            "AvailabilityZone" : "PublicAvailabilityZone",
+            "CidrBlock" : "10.50.2.0/24",
+            "Tags" : [ {"Key" : "Name", "Value" : "Publicsubnet2"}],
+            "VpcId" : {"Ref":"Securevpc"}
+  }
+},
+        "private1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+            "AvailabilityZone": { "Ref": "PrivateAvailabilityZone" },
+            "VpcId": { "Ref": "securevpc" },
+            "CidrBlock": "10.50.3.0/24",
+            "Tags" : [{"Key" : "Name", "Value" : "Privatesubnet1"}]
+        }
+},
+        "private2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+            "AvailabilityZone": { "Ref": "PrivateAvailabilityZone" },
+            "VpcId": { "Ref": "securevpc" },
+            "CidrBlock": "10.50.4.0/24",
+            "Tags" : [{"Key" : "Name", "Value" : "Privatesubnet2"}]
+          }
+        },
+        "publicroutetable": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+            "VpcId":  { "Ref": "securevpc" },
+            "Tags": [{"Key":"nameofroutetable","Value":"publicroutetable"}]
+          }
+        },
+        "routeName": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+            "RouteTableId":  { "Ref": "publicroutetable" },
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "GatewayId": { "Ref": "secureIGW" }
+          }
+        },
+        "elasticip": {
+        "Type": "AWS::EC2::EIP",
+        "Properties": {
+            "Domain": 
+            { "Ref": "securevpc" }
+            
+          }
+        },
+        "NatGateway": {
+            "Description": "NAT Gateway",
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "SubnetId":
+                { "Ref": "Publicsubnet1" },
+                "AllocationId": 
+                { "Ref": "elasticip" }
+                }
+        },
+        "Outputs":{
+        "VPC":{
+            "Description": "VPC Created with following details",
+            "Value": 
+            { "Ref": "securevpc" }
+            
+        }
+
+    }
+}
+ } 
